@@ -10,12 +10,25 @@ An automated data engineering pipeline that uses Large Language Models (LLMs) to
 * **Orchestration**: Orchestrated the workflow using **Prefect**, demonstrating modern DAG-based task scheduling, retry mechanisms, and observability.
 * **Database Integration (V2)**: Uses `SQLAlchemy`/`sqlite3` to sink the final structured Pandas DataFrames into a relational SQLite database (`cleaned_data.db`).
 
-## 🏗️ Architecture
-1. **Data Ingestion**: Reads raw data samples.
-2. **LLM Coder**: Prompts the LLM with a data sample and schema requirements to generate a Python data cleaning script.
-3. **Execution Sandbox**: Executes the generated Python code safely to process the full dataset.
-4. **Validation & Retry Loop**: Checks if the output matches the expected structure. If it fails, sends the error back to the LLM to fix the code (up to 3 retries).
-5. **Output**: Saves the cleaned data to structured formats like Parquet and CSV.
+## 🏗️ Architecture (System Flow)
+
+```mermaid
+graph TD
+    A[Raw Unstructured Data <br> CSV / Server Logs] --> B(Prefect Orchestrator)
+    B --> C{LLM Code Generator}
+    
+    C -->|Generates Pandas / Regex Script| D[Execution Sandbox]
+    
+    D -->|Fails: Exception Caught| E[Self-Healing Feedback Loop]
+    E -->|Sends Traceback for Debugging| C
+    
+    D -->|Success: Data Parsed| F[(SQLite Database Sink)]
+    D -->|Success: CSV Output| G[Cleaned CSV / Parquet]
+    
+    style C fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#ff9999,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+```
 
 ## 🚀 Quick Start
 
