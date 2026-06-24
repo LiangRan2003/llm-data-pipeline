@@ -1,0 +1,59 @@
+[
+  {
+    "name": "价格清洗",
+    "executed": true,
+    "row_count_preserved": true,
+    "schema_passed": true,
+    "values_passed": true,
+    "first_passed": true,
+    "attempts": 1,
+    "actual_values": null,
+    "error": "",
+    "passed": true,
+    "generated_code": "import pandas as pd\nimport numpy as np\n\ndef clean_data(df):\n    df = df.copy()\n    \n    def parse_price(val):\n        if isinstance(val, str):\n            val = val.strip()\n            if val.upper() == 'FREE':\n                return 0.0\n            val = val.replace('$', '').replace('USD', '').replace(',', '').replace('\"', '').strip()\n            try:\n                return float(val)\n            except:\n                return np.nan\n        elif isinstance(val, (int, float)):\n            return float(val)\n        else:\n            return np.nan\n    \n    df['price'] = df['price_string'].apply(parse_price)\n    df = df.drop(columns=['price_string'])\n    return df"
+  },
+  {
+    "name": "日期标准化",
+    "executed": true,
+    "row_count_preserved": true,
+    "schema_passed": true,
+    "values_passed": true,
+    "first_passed": false,
+    "attempts": 2,
+    "actual_values": [
+      "2023-10-01",
+      "2023-10-02",
+      null,
+      "2023-10-03"
+    ],
+    "error": "",
+    "passed": true,
+    "generated_code": "import pandas as pd\n\ndef clean_data(df):\n    df = df.copy()\n    dates = df['date'].astype(str)\n    parsed = []\n    for d in dates:\n        if d == 'invalid_date':\n            parsed.append(pd.NaT)\n        else:\n            try:\n                parsed.append(pd.Timestamp(d))\n            except:\n                parsed.append(pd.NaT)\n    df['date'] = parsed\n    return df"
+  },
+  {
+    "name": "嵌套 JSON 展开",
+    "executed": true,
+    "row_count_preserved": true,
+    "schema_passed": true,
+    "values_passed": true,
+    "first_passed": true,
+    "attempts": 1,
+    "actual_values": null,
+    "error": "",
+    "passed": true,
+    "generated_code": "import pandas as pd\nimport json\n\ndef clean_data(df):\n    def parse_metadata(meta_str):\n        if pd.isna(meta_str):\n            return pd.Series([None, None])\n        try:\n            meta = json.loads(meta_str)\n            category = meta.get(\"category\")\n            warranty = meta.get(\"warranty_years\")\n            return pd.Series([category, warranty])\n        except (json.JSONDecodeError, TypeError, ValueError):\n            return pd.Series([None, None])\n    \n    df[[\"metadata_category\", \"metadata_warranty_years\"]] = df[\"metadata\"].apply(parse_metadata)\n    df.drop(columns=[\"metadata\"], inplace=True)\n    return df"
+  },
+  {
+    "name": "用户编号规范化",
+    "executed": true,
+    "row_count_preserved": true,
+    "schema_passed": true,
+    "values_passed": true,
+    "first_passed": true,
+    "attempts": 1,
+    "actual_values": null,
+    "error": "",
+    "passed": true,
+    "generated_code": "import pandas as pd\nimport re\n\ndef clean_data(df):\n    def extract_id(val):\n        if pd.isna(val):\n            return pd.NA\n        s = str(val).strip()\n        if not s:\n            return pd.NA\n        match = re.search(r'(\\d+)', s)\n        if match:\n            return f\"U-{match.group(1)}\"\n        else:\n            return pd.NA\n    df['user_id'] = df['user_id'].apply(extract_id)\n    return df"
+  }
+]

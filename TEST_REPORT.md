@@ -4,6 +4,19 @@
 
 已为 LLM 数据管道建立可离线运行的 pytest 回归测试。测试不调用外部大模型 API，重点验证 LLM 生成代码进入系统后的执行边界，以及样例数据生成器的稳定性。
 
+## 真实模型质量指标
+
+| 指标 | 结果 |
+| --- | ---: |
+| 首轮场景通过率 | 75.0%（3/4） |
+| 代码可执行率 | 100.0%（4/4） |
+| 数据值正确率 | 100.0%（4/4） |
+| 自修复后通过率 | 100.0%（4/4） |
+
+在线评测覆盖价格清洗、混合日期、嵌套 JSON 和用户编号四类任务。混合日期首轮失败，在收到实际值与期望值反馈后第二次生成通过，验证了项目的自修复闭环。
+
+完整结果见 evaluation/LIVE_EVALUATION_REPORT.md，原始输出与生成代码见 evaluation/results.json。API 密钥不会写入评测结果或仓库。
+
 ## 覆盖范围
 
 - 动态执行 clean_data 清洗函数，并验证返回值必须是 pandas DataFrame。
@@ -23,7 +36,12 @@
 
 测试结果：7 passed
 
+在线质量评测需要在进程环境中提供 OPENAI_API_KEY：
+
+    python evaluation/evaluate_live_llm.py
+
 ## 测试文件
 
 - tests/test_executor_and_generators.py
-
+- evaluation/evaluate_live_llm.py
+- evaluation/LIVE_EVALUATION_REPORT.md
