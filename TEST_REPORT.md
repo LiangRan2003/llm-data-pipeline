@@ -1,37 +1,29 @@
-# Test Report
+# 测试报告
 
-## Summary
+## 测试结论
 
-Added a focused offline pytest suite for the LLM-powered data pipeline. The tests validate the parts of the project that can be checked deterministically without calling an external LLM API.
+已为 LLM 数据管道建立可离线运行的 pytest 回归测试。测试不调用外部大模型 API，重点验证 LLM 生成代码进入系统后的执行边界，以及样例数据生成器的稳定性。
 
-## What Is Covered
+## 覆盖范围
 
-- Dynamic cleaning-code execution through `execute_cleaning_script`.
-- Contract enforcement for generated LLM code:
-  - A `clean_data` function must be defined.
-  - The function must return a pandas `DataFrame`.
-- Input immutability: generated cleaning code receives a copy of the raw data.
-- Synthetic sales-data generation schema and row count.
-- Synthetic server-log generation schema and log format.
+- 动态执行 clean_data 清洗函数，并验证返回值必须是 pandas DataFrame。
+- 验证输入 DataFrame 使用副本，避免生成代码污染原始数据。
+- 验证执行环境正确提供 pandas 和 json。
+- 验证缺少函数、错误返回类型及业务异常均会转换为带异常类型、消息和堆栈的 RuntimeError。
+- 验证销售数据的行数、字段、交易编号和 metadata JSON 结构。
+- 验证服务器日志的行数、字段和两种日志格式。
 
-## Why This Matters
+## 成果价值
 
-The pipeline depends on LLM-generated Python code. These tests pin down the execution boundary around that generated code, so future changes can catch unsafe return types, missing functions, broken mock data, or accidental mutation of raw inputs before a full LLM run is attempted.
+这组测试保护了项目风险最高的边界：未经人工确认的 LLM 代码执行。代码契约破坏、异常信息丢失、原始数据被修改或模拟数据格式漂移，都能在本地和 CI 中快速暴露。
 
-## Verification
+## 验证方式
 
-Command:
+    python -m pytest -q
 
-```powershell
-python -m pytest -q
-```
+测试结果：7 passed
 
-Result:
+## 测试文件
 
-```text
-4 passed
-```
+- tests/test_executor_and_generators.py
 
-## Files Added
-
-- `tests/test_executor_and_generators.py`
